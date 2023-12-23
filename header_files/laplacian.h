@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <iostream>
 #include <cmath>
+#include "processing_methods.h"
 
 #define PI 3.1415926535898
 
@@ -12,10 +13,9 @@ class laplacian
 {
 public:
     laplacian();
-
-    laplacian(QImage* img);
 public slots:
     QImage processImage();
+    void setImage(QImage *img);
 
 private:
     void calc_filter(double kernel[][5]);

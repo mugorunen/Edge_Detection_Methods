@@ -4,7 +4,7 @@ prewitt::prewitt()
 {
 }
 
-prewitt::prewitt(QImage *img)
+void prewitt::setImage(QImage *img)
 {
     imageSize = img->size();
     grayImage = img->convertToFormat(QImage::Format_Grayscale8);
@@ -41,14 +41,13 @@ QImage prewitt::processImage()
         }
     }
 
-
     // magnitude
     for (int i = 0; i < imageSize.height(); i++)
     {
         for (int j = 0; j < imageSize.width(); j++)
         {
-            img2d_mag[i][j] = static_cast<int> (sqrt(pow(img2d_hor[i][j], 2) + pow(img2d_ver[i][j], 2)));
-            img2d_mag[i][j] = std::min(255, std::max(0, img2d_mag[i][j]));  // Clamp to [0, 255]
+            img2d_mag[i][j] = static_cast<int>(sqrt(pow(img2d_hor[i][j], 2) + pow(img2d_ver[i][j], 2)));
+            img2d_mag[i][j] = std::min(255, std::max(0, img2d_mag[i][j])); // Clamp to [0, 255]
         }
     }
 

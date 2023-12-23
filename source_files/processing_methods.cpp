@@ -1,25 +1,35 @@
 #include "../header_files/processing_methods.h"
 
-void Processing_Methods::setImage(QImage *image)
+Processing_Methods::Processing_Methods()
 {
-    processingImage = *image;
-    imageSize = processingImage.size();
-    processingImage.convertTo(QImage::Format_Grayscale8);
+}
+void Processing_Methods::setImage(QImage *img)
+{
+    imageSize = img->size();
+    grayImage = img->convertToFormat(QImage::Format_Grayscale8);
 }
 
-QImage Processing_Methods::getFilteredImage(QSize Image_size, QImage::Format format)
+Myarray Processing_Methods::calc_filter(Myarray &kernel)
 {
-    // Invoke constructor of QImage class
-    QImage img(Image_size, format);
-
-    // Assign the pixel values after operation to QImage object
-    for (int i = 0; i < img.height(); i++)
+    double sigma = 1.0;
+    double p, q = 2.0 * sigma * sigma;
+    double sum = 0.0;
+    for (int x = -2; x <= 2; x++)
     {
-        for (int j = 0; j < img.width(); j++)
+        for (int y = -2; y <= 2; y++)
         {
-            img.setPixel(j, i, image_after_filter[i][j]);
+            p = sqrt(x * x + y * y);
+            kernel[x + 2][y + 2] = (exp(-(p * p) / q)) / (PI * q);
+            sum += kernel[x + 2][y + 2];
+        }
+    }
+    for (int i = 0; i < 5; i++)
+    {
+        for (int j = 0; j < 5; j++)
+        {
+            kernel[i][j] /= sum;
         }
     }
 
-    return img;
+    return kernel;
 }

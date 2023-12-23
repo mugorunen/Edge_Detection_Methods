@@ -4,12 +4,11 @@ laplacian::laplacian()
 {
 }
 
-laplacian::laplacian(QImage *img)
+void laplacian::setImage(QImage *img)
 {
     imageSize = img->size();
     grayImage = img->convertToFormat(QImage::Format_Grayscale8);
 }
-
 
 QImage laplacian::processImage()
 {
@@ -20,13 +19,12 @@ QImage laplacian::processImage()
     // Read QImage into 2D vector
     for (int y = 0; y < imageSize.height(); ++y)
     {
-        uint8_t *line = reinterpret_cast<uint8_t*>(grayImage.scanLine(y));
+        uint8_t *line = reinterpret_cast<uint8_t *>(grayImage.scanLine(y));
         for (int x = 0; x < imageSize.width(); ++x)
         {
             imageData[y][x] = (double)line[x];
         }
     }
-
 
     // Since laplacian is noisier, it is better to smooth image with a Gaussian filter
     // We define a 5x5 Gaussian kernel
@@ -55,9 +53,9 @@ QImage laplacian::processImage()
         for (int j = 1; j < imageSize.width() - 1; j++)
         {
             // Apply the laplacian operator [[-1, -1, -1], [-1, 8, -1], [-1, -1 -1]]
-            img2d[i][j] = -imageData[i - 1][j - 1] - imageData[i - 1][j] - imageData[i - 1][j + 1] - 
-                           imageData[i][j - 1] + 8 * imageData[i][j] - imageData[i][j + 1] - 
-                           imageData[i + 1][j - 1] - imageData[i + 1][j] - imageData[i + 1][j + 1];
+            img2d[i][j] = -imageData[i - 1][j - 1] - imageData[i - 1][j] - imageData[i - 1][j + 1] -
+                          imageData[i][j - 1] + 8 * imageData[i][j] - imageData[i][j + 1] -
+                          imageData[i + 1][j - 1] - imageData[i + 1][j] - imageData[i + 1][j + 1];
             img2d[i][j] = std::min(std::max(static_cast<int>(img2d[i][j]), 0), 255);
         }
     }

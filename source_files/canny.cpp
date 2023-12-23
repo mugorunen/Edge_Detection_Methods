@@ -4,7 +4,7 @@ canny::canny()
 {
 }
 
-canny::canny(QImage *img)
+void canny::setImage(QImage *img)
 {
     imageSize = img->size();
     grayImage = img->convertToFormat(QImage::Format_Grayscale8);
@@ -17,7 +17,6 @@ void canny::initializeImage()
     gradient = std::vector<std::vector<int>>(imageSize.height(), std::vector<int>(imageSize.width(), 0));
     angle = std::vector<std::vector<int>>(imageSize.height(), std::vector<int>(imageSize.width(), 0));
 }
-
 
 QImage canny::processImage()
 {

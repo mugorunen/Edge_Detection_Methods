@@ -5,12 +5,14 @@
 #include <QDebug>
 #include <iostream>
 #include <cmath>
+#include "processing_methods.h"
 
 class sobel
 {
 public:
     sobel();
-    sobel(QImage* img);
+
+    void setImage(QImage *img);
 
 public slots:
     QImage processImage();

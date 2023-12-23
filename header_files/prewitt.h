@@ -5,12 +5,13 @@
 #include <QDebug>
 #include <iostream>
 #include <cmath>
+#include "processing_methods.h"
 
 class prewitt
 {
 public:
     prewitt();
-    prewitt(QImage* img);
+    void setImage(QImage *img);
 public slots:
     QImage processImage();
 
@@ -20,4 +21,3 @@ private:
 };
 
 #endif // PREWITT_H
-

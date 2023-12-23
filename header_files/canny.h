@@ -5,21 +5,21 @@
 #include <QDebug>
 #include <iostream>
 #include <cmath>
+#include "processing_methods.h"
 
 #define PI 3.1415926535898
-
 
 class canny
 {
 public:
     canny();
 
-    canny(QImage* img);
-    int upperThreshold=70;
-    int lowerThreshold=35;
+    int upperThreshold = 70;
+    int lowerThreshold = 35;
 
 public slots:
     QImage processImage();
+    void setImage(QImage *img);
 
 private:
     void initializeImage();

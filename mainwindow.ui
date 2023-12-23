@@ -193,7 +193,7 @@
           </rect>
          </property>
          <property name="text">
-          <string>Deriche Fil</string>
+          <string>Deriche</string>
          </property>
         </widget>
         <widget class="QLabel" name="alphaLabel">

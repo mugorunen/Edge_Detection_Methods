@@ -12,13 +12,13 @@ class deriche
 {
 public:
     deriche();
-    deriche(QImage *image);
     int upperThreshold = 70;
     int lowerThreshold = 35;
     double alpha = 0.5;
 
 public slots:
     QImage processImage();
+    void setImage(QImage *img);
 
 private:
     void initializeImage();

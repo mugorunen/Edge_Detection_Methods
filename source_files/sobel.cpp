@@ -4,7 +4,7 @@ sobel::sobel()
 {
 }
 
-sobel::sobel(QImage *img)
+void sobel::setImage(QImage *img)
 {
     imageSize = img->size();
     grayImage = img->convertToFormat(QImage::Format_Grayscale8);
