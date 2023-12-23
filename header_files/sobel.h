@@ -10,15 +10,16 @@ class sobel
 {
 public:
     sobel();
-    void setImage(QImage *image);
+    sobel(QImage* img);
+
 public slots:
-    void processImage();
-    QImage getFilteredImage();
+    QImage processImage();
 
 private:
-    QImage processingImage;
-    uchar **saveData;
+    QImage grayImage;
     QSize imageSize;
+    
+    
 };
 
 #endif // SOBEL_H

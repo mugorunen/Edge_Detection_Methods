@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
 project(MyQtProject LANGUAGES CXX)
 
-
-set(CMAKE_PREFIX_PATH "/Your/Qt/Directory/")
+set(CMAKE_BUILD_TYPE Debug)
 
 # Set minimum required version of Qt
 find_package(Qt6 COMPONENTS Widgets REQUIRED)
+
+# Find OpenCV
+find_package(OpenCV REQUIRED)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -23,14 +25,10 @@ file(GLOB SOURCES "*.cpp" "source_files/*.cpp")
 file(GLOB HEADERS "*.h" "header_files/*.h")
 
 # Set your UI files (if any)
-set(UIS
-    mainwindow.ui
-)
+set(UIS mainwindow.ui)
 
 # Set your resource files (if any)
-set(RESOURCES
-    images.qrc
-)
+set(RESOURCES images.qrc)
 
 # Create executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${UIS} ${RESOURCES})
@@ -42,8 +40,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/source_files
 )
 
-# Link against Qt libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets Qt6::Gui)
+# Link against Qt and OpenCV libraries
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets Qt6::Gui ${OpenCV_LIBS})
 
 # Set C++ standard
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -51,7 +49,3 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 )
-
-# Additional configuration options
-# For example, you may want to enable debugging information
-# set(CMAKE_BUILD_TYPE Debug)

@@ -12,17 +12,17 @@ class laplacian
 {
 public:
     laplacian();
-    void setImage(QImage *image);
+
+    laplacian(QImage* img);
 public slots:
-    void processImage();
-    QImage getFilteredImage();
+    QImage processImage();
 
 private:
     void calc_filter(double kernel[][5]);
+
     void creating_kernel(double kernel[][5]);
-    QImage processingImage;
+    QImage grayImage;
     QSize imageSize;
-    uchar **saveData;
 };
 
 #endif // LAPLACIAN_H

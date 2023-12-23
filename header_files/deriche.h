@@ -12,16 +12,16 @@ class deriche
 {
 public:
     deriche();
-    void setImage(QImage *image);
+    deriche(QImage *image);
     int upperThreshold = 70;
     int lowerThreshold = 35;
     double alpha = 0.5;
 
 public slots:
-    void processImage();
-    QImage getFilteredImage();
+    QImage processImage();
 
 private:
+    void initializeImage();
     void calc_filter(double kernel[][5]);
     void creating_kernel(double kernel[][5]);
     void findMagnitudeAngle(double alpha);
@@ -29,12 +29,10 @@ private:
     void suppressNonMax(int rowShift, int colShift, int row, int col, int dir);
     QSize imageSize;
 
-    QImage processingImage;
-    double **imageData;
-    uchar **saveData;
-
-    int **angle;
-    double **gradient;
+    QImage grayImage;
+    std::vector<std::vector<int>> ImageData;
+    std::vector<std::vector<int>> gradient;
+    std::vector<std::vector<int>> angle;
 
     bool edgeEnd;
 };

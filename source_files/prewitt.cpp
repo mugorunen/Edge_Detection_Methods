@@ -2,124 +2,75 @@
 
 prewitt::prewitt()
 {
-
 }
 
-void prewitt::setImage(QImage *image)
+prewitt::prewitt(QImage *img)
 {
-    processingImage =QImage();
-    processingImage = *image;
-    imageSize = processingImage.size();
-    processingImage.convertTo(QImage::Format_Grayscale8);
+    imageSize = img->size();
+    grayImage = img->convertToFormat(QImage::Format_Grayscale8);
 }
 
-void prewitt::processImage()
+QImage prewitt::processImage()
 {
-    int **imageData = new int*[imageSize.height()];
-    for(int i=0; i<imageSize.height();i++)
-        imageData[i] = new int[imageSize.width()];
+    std::vector<std::vector<int>> img2d(imageSize.height(), std::vector<int>(imageSize.width(), 0));
+    std::vector<std::vector<int>> img2d_hor(imageSize.height(), std::vector<int>(imageSize.width(), 0));
+    std::vector<std::vector<int>> img2d_ver(imageSize.height(), std::vector<int>(imageSize.width(), 0));
+    std::vector<std::vector<int>> img2d_mag(imageSize.height(), std::vector<int>(imageSize.width(), 0));
+    std::vector<std::vector<uchar>> saveData(imageSize.height(), std::vector<uchar>(imageSize.width(), 0));
 
-
+    // Read QImage into 2D vector
     for (int y = 0; y < imageSize.height(); ++y)
     {
-        uint8_t *line = reinterpret_cast<uint8_t*>(processingImage.scanLine(y));
+        const uchar *scanLine = grayImage.scanLine(y);
         for (int x = 0; x < imageSize.width(); ++x)
         {
-            imageData[y][x] = (int)(line[x] );
+            img2d[y][x] = scanLine[x];
         }
     }
-    int **img2dhororg = new int*[imageSize.height()];
-    for(int i=0; i<imageSize.height();i++)
-        img2dhororg[i] = new int[imageSize.width()];
 
-    int **img2dverorg = new int*[imageSize.height()];
-    for(int i=0; i<imageSize.height();i++)
-        img2dverorg[i] = new int[imageSize.width()];
-
-    int **img2dmag = new int*[imageSize.height()];
-    for(int i=0; i<imageSize.height();i++)
-        img2dmag[i] = new int[imageSize.width()];
-
-    //horizontal
-
-    for (int i=1; i<imageSize.height()-1; i++)
+    // horizontal and vertical
+    for (int i = 1; i < imageSize.height() - 1; i++)
     {
-        for (int j=1; j<imageSize.width()-1; j++)
+        for (int j = 1; j < imageSize.width() - 1; j++)
         {
-          int curr=imageData[i-1][j-1] + imageData[i-1][j]+imageData[i-1][j+1]-imageData[i+1][j-1]-imageData[i+1][j]-imageData[i+1][j+1];
-          img2dhororg[i][j] = curr;
+            img2d_hor[i][j] = img2d[i - 1][j - 1] + img2d[i - 1][j] + img2d[i - 1][j + 1] -
+                              img2d[i + 1][j - 1] - img2d[i + 1][j] - img2d[i + 1][j + 1];
 
+            img2d_ver[i][j] = img2d[i - 1][j - 1] + img2d[i][j - 1] + img2d[i + 1][j - 1] -
+                              img2d[i - 1][j + 1] - img2d[i][j + 1] - img2d[i + 1][j + 1];
         }
     }
 
 
-    //vertical:
-    for (int i=1; i<imageSize.height()-1; i++)
-    {
-        for (int j=1; j<imageSize.width()-1; j++)
-        {
-            int curr=imageData[i-1][j-1]+imageData[i][j-1]+imageData[i+1][j-1]-imageData[i-1][j+1]-imageData[i][j+1]-imageData[i+1][j+1];
-            img2dverorg[i][j] = curr;
-        }
-    }
-
-    for(int i = 0; i < imageSize.height(); ++i)
-    {
-        delete[] imageData[i];
-    }
-    delete[] imageData;
-
-    //magnitude
-    for (int i=0; i<imageSize.height(); i++)
-    {
-        for (int j=0; j<imageSize.width(); j++)
-        {
-            img2dmag[i][j] = sqrt(pow(img2dhororg[i][j], 2)+pow(img2dverorg[i][j], 2));
-            img2dmag[i][j] = img2dmag[i][j] > 255 ? 255:img2dmag[i][j];
-            img2dmag[i][j] = img2dmag[i][j] < 0 ? 0 : img2dmag[i][j];
-        }
-    }
-
-    for(int i = 0; i < imageSize.height(); ++i)
-    {
-        delete[] img2dverorg[i];
-        delete[] img2dhororg[i];
-    }
-    delete[] img2dverorg;
-    delete[] img2dhororg;
-
-
-    saveData = new uchar*[imageSize.height()];
+    // magnitude
     for (int i = 0; i < imageSize.height(); i++)
-        saveData[i] = new uchar[imageSize.width()];
+    {
+        for (int j = 0; j < imageSize.width(); j++)
+        {
+            img2d_mag[i][j] = static_cast<int> (sqrt(pow(img2d_hor[i][j], 2) + pow(img2d_ver[i][j], 2)));
+            img2d_mag[i][j] = std::min(255, std::max(0, img2d_mag[i][j]));  // Clamp to [0, 255]
+        }
+    }
+
+    // Invoke constructor of QImage class
+    QImage img(imageSize, QImage::Format_Grayscale8);
 
     for (int y = 0; y < imageSize.height(); ++y)
     {
         for (int x = 0; x < imageSize.width(); ++x)
         {
-            saveData[y][x] = (uchar)(img2dmag[y][x]);
+            saveData[y][x] = static_cast<uchar>(img2d_mag[y][x]);
         }
     }
 
-    for(int i = 0; i < imageSize.height(); ++i)
+    for (int i = 0; i < img.height(); i++)
     {
-        delete[] img2dmag[i];
-    }
-    delete[] img2dmag;
-}
+        const uint8_t *src = saveData[i].data();
 
-QImage prewitt::getFilteredImage()
-{
-    QImage img(imageSize, QImage::Format_Grayscale8);
-    for (int y = 0; y < imageSize.height(); y++)
-    {
-        memcpy(img.scanLine(y),saveData[y],img.bytesPerLine());
+        void *dest = img.scanLine(i);
+
+        std::memcpy(dest, src, img.bytesPerLine());
     }
-    for(int i = 0; i < imageSize.height(); ++i)
-    {
-        delete[] saveData[i];
-    }
-    delete[] saveData;
 
     return img;
 }

@@ -5,32 +5,33 @@ deriche::deriche()
 
 }
 
-void deriche::setImage(QImage *image)
-{  
-    imageSize = image->size();
+deriche::deriche(QImage *img){
+    imageSize = img->size();
+    grayImage = img->convertToFormat(QImage::Format_Grayscale8);
+    initializeImage();
+}
 
-    processingImage =QImage(*image);
-    imageSize = processingImage.size();
-    processingImage.convertTo(QImage::Format_Grayscale8);
+void deriche::initializeImage()
+{
+    ImageData = std::vector<std::vector<int>>(imageSize.height(), std::vector<int>(imageSize.width(), 0));
+    gradient = std::vector<std::vector<int>>(imageSize.height(), std::vector<int>(imageSize.width(), 0));
+    angle = std::vector<std::vector<int>>(imageSize.height(), std::vector<int>(imageSize.width(), 0));
+}
 
 
-    imageData = new double*[imageSize.height()];
-    for(int i=0; i< imageSize.height(); i++)
-        imageData[i] = new double[imageSize.width()];
-
+QImage deriche::processImage()
+{
+    std::vector<std::vector<uchar>> saveData(imageSize.height(), std::vector<uchar>(imageSize.width(), 0));
 
     for (int y = 0; y < imageSize.height(); ++y)
     {
-        uint8_t *line = reinterpret_cast<uint8_t*>(processingImage.scanLine(y));
+        uint8_t *line = reinterpret_cast<uint8_t*>(grayImage.scanLine(y));
         for (int x = 0; x < imageSize.width(); ++x)
         {
-            imageData[y][x] = (double)(line[x] );
+            ImageData[y][x] = (double)(line[x] );
         }
     }
-}
 
-void deriche::processImage()
-{
     double kernel[5][5];
     calc_filter(kernel);
 
@@ -44,10 +45,10 @@ void deriche::processImage()
             {
                 for (int k2=0; k2<5; k2++)
                 {
-                    curr += kernel[k1][k2]*imageData[i+(k1-2)][j+(k2-2)];
+                    curr += kernel[k1][k2]*ImageData[i+(k1-2)][j+(k2-2)];
                 }
             }
-            imageData[i][j] = curr;
+            ImageData[i][j] = curr;
         }
     }
 
@@ -77,12 +78,12 @@ void deriche::processImage()
                         findEdge(1, -1, row, col, 135);
                         break;
                     default :
-                        imageData[row][col]= 0;
+                        ImageData[row][col]= 0;
                         break;
                     }
                 }
             else {
-                imageData[row][col]= 0;
+                ImageData[row][col]= 0;
             }
         }
     }
@@ -92,7 +93,7 @@ void deriche::processImage()
     {
         for (int col = 1; col < imageSize.width() - 1; col++)
         {
-            if (imageData[row][col] == 255)
+            if (ImageData[row][col] == 255)
             {   // Check to see if current pixel is an edge
                 // Switch based on current pixel's edge direction
                 switch (angle[row][col]) {
@@ -115,45 +116,28 @@ void deriche::processImage()
         }
     }
 
-    saveData = new uchar*[imageSize.height()];
-    for (int i = 0; i < imageSize.height(); i++)
-        saveData[i] = new uchar[imageSize.width()];
+    // Invoke constructor of QImage class
+    QImage img(imageSize, QImage::Format_Grayscale8);
 
     for (int y = 0; y < imageSize.height(); ++y)
     {
         for (int x = 0; x < imageSize.width(); ++x)
         {
-            saveData[y][x] = (uchar)(imageData[y][x]);
+            saveData[y][x] = static_cast<uchar>(ImageData[y][x]);
         }
     }
 
-    for(int i = 0; i < imageSize.height(); ++i)
+    for (int i = 0; i < img.height(); i++)
     {
-        delete[] gradient[i];
-        delete[] imageData[i];
-        delete[] angle[i];
-    }
-    delete[] gradient;
-    delete[] imageData;
-    delete []angle;
+        const uint8_t *src = saveData[i].data();
 
-}
+        void *dest = img.scanLine(i);
 
-QImage deriche::getFilteredImage()
-{
-    QImage img(imageSize, QImage::Format_Grayscale8);
-    for (int y = 0; y < img.height(); y++)
-    {
-        memcpy(img.scanLine(y),saveData[y],img.bytesPerLine());
+        std::memcpy(dest, src, img.bytesPerLine());
     }
-
-    for(int i = 0; i < imageSize.height(); ++i)
-    {
-        delete[] saveData[i];
-    }
-    delete[] saveData;
 
     return img;
+
 }
 
 
@@ -195,25 +179,17 @@ void deriche::findMagnitudeAngle(double alpha)
     double b2 = -1*expmin2a;
     double c1 =1 , c2= 2;
 
+    std::vector<std::vector<double>> img2dlorg(imageSize.height(), std::vector<double>(imageSize.width(), 0));
+    std::vector<std::vector<double>> img2drorg(imageSize.height(), std::vector<double>(imageSize.width(), 0));
+    std::vector<std::vector<double>> theta(imageSize.height(), std::vector<double>(imageSize.width(), 0));
 
-    double **img2dlorg = new double*[imageSize.height()];
-    for(int i=0; i<imageSize.height();i++)
-        img2dlorg[i] = new double[imageSize.width()];
-
-    double **img2drorg = new double*[imageSize.height()];
-    for(int i=0; i<imageSize.height();i++)
-        img2drorg[i] = new double[imageSize.width()];
-
-    double **theta = new double*[imageSize.height()];
-    for(int i=0; i<imageSize.height();i++)
-        theta[i] = new double[imageSize.width()];
 
     //left to right
     for (int i=0; i<imageSize.height(); i++)
     {
         for (int j=2; j<imageSize.width(); j++)
         {
-            img2dlorg[i][j]=a1*imageData[i][j] + a2*imageData[i][j-1] + b1*img2dlorg[i][j-1] + b2*img2dlorg[i][j-2];
+            img2dlorg[i][j]=a1*ImageData[i][j] + a2*ImageData[i][j-1] + b1*img2dlorg[i][j-1] + b2*img2dlorg[i][j-2];
         }
     }
     //right to left
@@ -221,7 +197,7 @@ void deriche::findMagnitudeAngle(double alpha)
     {
         for (int j=0; j<imageSize.width()-2; j++)
         {
-            img2drorg[i][j]=a3*imageData[i][j+1] + a4*imageData[i][j+2] + b1*img2drorg[i][j+1] + b2*img2drorg[i][j+2];
+            img2drorg[i][j]=a3*ImageData[i][j+1] + a4*ImageData[i][j+2] + b1*img2drorg[i][j+1] + b2*img2drorg[i][j+2];
         }
     }
     //temporary
@@ -254,37 +230,22 @@ void deriche::findMagnitudeAngle(double alpha)
     {
         for (int j=0; j<imageSize.width()-2; j++)
         {
-            imageData[i][j] = c2*(img2dlorg[i][j] + img2drorg[i][j]);
-            imageData[i][j] = imageData[i][j] > 255 ? 255 : imageData[i][j];
-            imageData[i][j] = imageData[i][j] < 0   ? 0   : imageData[i][j];
+            ImageData[i][j] = c2*(img2dlorg[i][j] + img2drorg[i][j]);
+            ImageData[i][j] = ImageData[i][j] > 255 ? 255 : ImageData[i][j];
+            ImageData[i][j] = ImageData[i][j] < 0   ? 0   : ImageData[i][j];
 
         }
     }
 
-    for(int i = 0; i < imageSize.height(); ++i)
-    {
-        delete[] img2drorg[i];
-        delete[] img2dlorg[i];
-        delete[] theta[i];
-    }
-    delete[] img2drorg;
-    delete[] img2dlorg;
-    delete []theta;
-
-    double **img2dhororg = new double*[imageSize.height()];
-    for(int i=0; i<imageSize.height();i++)
-        img2dhororg[i] = new double[imageSize.width()];
-
-    double **img2dverorg = new double*[imageSize.height()];
-    for(int i=0; i<imageSize.height();i++)
-        img2dverorg[i] = new double[imageSize.width()];
+    std::vector<std::vector<double>> img2dhororg(imageSize.height(), std::vector<double>(imageSize.width(), 0));
+    std::vector<std::vector<double>> img2dverorg(imageSize.height(), std::vector<double>(imageSize.width(), 0));
 
     //horizontal - Gy
     for (int i=1; i<imageSize.height()-1; i++)
     {
         for (int j=1; j<imageSize.width()-1; j++)
         {
-            img2dhororg[i][j]=imageData[i-1][j-1] + 2*imageData[i-1][j]+imageData[i-1][j+1]-imageData[i+1][j-1]-2*imageData[i+1][j]-imageData[i+1][j+1];
+            img2dhororg[i][j]=ImageData[i-1][j-1] + 2*ImageData[i-1][j]+ImageData[i-1][j+1]-ImageData[i+1][j-1]-2*ImageData[i+1][j]-ImageData[i+1][j+1];
         }
     }
     //vertical - Gx
@@ -292,19 +253,10 @@ void deriche::findMagnitudeAngle(double alpha)
     {
         for (int j=1; j<imageSize.width()-1; j++)
         {
-            img2dverorg[i][j]=imageData[i-1][j-1]+2*imageData[i][j-1]+imageData[i+1][j-1]-imageData[i-1][j+1]-2*imageData[i][j+1]-imageData[i+1][j+1];
+            img2dverorg[i][j]=ImageData[i-1][j-1]+2*ImageData[i][j-1]+ImageData[i+1][j-1]-ImageData[i-1][j+1]-2*ImageData[i][j+1]-ImageData[i+1][j+1];
         }
     }
 
-
-    gradient = new double*[imageSize.height()];
-    for(int i=0; i<imageSize.height();i++)
-        gradient[i] = new double[imageSize.width()];
-
-
-    angle = new int*[imageSize.height()];
-    for(int i=0; i<imageSize.height();i++)
-        angle[i] = new int[imageSize.width()];
 
 
 
@@ -332,14 +284,6 @@ void deriche::findMagnitudeAngle(double alpha)
             angle[i][j] = newAngle;
         }
     }
-
-    for(int i = 0; i < imageSize.height(); ++i)
-    {
-        delete[] img2dverorg[i];
-        delete[] img2dhororg[i];
-    }
-    delete[] img2dverorg;
-    delete[] img2dhororg;
 
 }
 
@@ -383,7 +327,7 @@ void deriche::findEdge(int rowShift, int colShift, int row, int col, int dir)
     while ( (angle[newRow][newCol]==dir) && !edgeEnd && (gradient[newRow][newCol] > lowerThreshold) )
     {
         /* Set the new pixel as white to show it is an edge */
-        imageData[newRow][newCol] = 255;
+        ImageData[newRow][newCol] = 255;
         if (colShift < 0)
         {
             if (newCol > 0)
@@ -444,7 +388,7 @@ void deriche::suppressNonMax(int rowShift, int colShift, int row, int col, int d
     } else
         edgeEnd = true;
     /* Find non-maximum parallel edges tracing up */
-    while ((angle[newRow][newCol] == dir) && !edgeEnd && (imageData[newRow][newCol] == 255)) {
+    while ((angle[newRow][newCol] == dir) && !edgeEnd && (ImageData[newRow][newCol] == 255)) {
         if (colShift < 0) {
             if (newCol > 0)
                 newCol = newCol + colShift;
@@ -491,7 +435,7 @@ void deriche::suppressNonMax(int rowShift, int colShift, int row, int col, int d
         newRow = row + rowShift;
     } else
         edgeEnd = true;
-    while ((angle[newRow][newCol] == dir) && !edgeEnd && (imageData[newRow][newCol]== 255)) {
+    while ((angle[newRow][newCol] == dir) && !edgeEnd && (ImageData[newRow][newCol]== 255)) {
         if (colShift < 0) {
             if (newCol > 0)
                 newCol = newCol + colShift;
@@ -528,6 +472,6 @@ void deriche::suppressNonMax(int rowShift, int colShift, int row, int col, int d
         }
     }
     for (count = 0; count < pixelCount; count++) {
-        imageData[(int)nonMax[count][0]][(int)nonMax[count][1]] = 0;
+        ImageData[(int)nonMax[count][0]][(int)nonMax[count][1]] = 0;
     }
 }

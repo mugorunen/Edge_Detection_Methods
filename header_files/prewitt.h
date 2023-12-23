@@ -10,15 +10,14 @@ class prewitt
 {
 public:
     prewitt();
-    void setImage(QImage *image);
+    prewitt(QImage* img);
 public slots:
-    void processImage();
-    QImage getFilteredImage();
+    QImage processImage();
 
 private:
-    QImage processingImage;
+    QImage grayImage;
     QSize imageSize;
-    uchar **saveData;
 };
 
 #endif // PREWITT_H
+
