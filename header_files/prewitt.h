@@ -5,7 +5,6 @@
 #include <QDebug>
 #include <iostream>
 #include <cmath>
-#include "processing_methods.h"
 
 class prewitt
 {

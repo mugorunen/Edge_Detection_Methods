@@ -5,7 +5,6 @@
 #include <QDebug>
 #include <iostream>
 #include <cmath>
-#include "processing_methods.h"
 
 #define PI 3.1415926535898
 
