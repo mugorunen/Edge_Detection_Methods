@@ -6,8 +6,6 @@ set(CMAKE_BUILD_TYPE Debug)
 # Set minimum required version of Qt
 find_package(Qt6 COMPONENTS Widgets REQUIRED)
 
-# Find OpenCV
-find_package(OpenCV REQUIRED)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
